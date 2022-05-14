@@ -1,0 +1,161 @@
+.disclaimer{
+  display: none;
+}
+
+
+
+
+body{
+  margin: 0;
+  font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, Helvetica, sans-serif;
+}
+#map{
+  height: 100vh;
+  width: 100vw;
+}
+.zoom_level{
+  margin: 10px 0px;
+  width: fit-content;
+  height: 36px;
+  background: #FFFF;
+  border: 0px;
+  border-radius: 0px 4px 4px 0px;
+  padding: 0px 6px;
+  pointer-events: auto;
+}
+.mapboxgl-ctrl-geocoder{
+  border-radius: 4px 0px 0px 4px !important;
+}
+.map-tags{
+  display: flex;
+  place-items: center;
+  pointer-events: auto;
+  margin: 10px 20px 0px 0px;
+}
+.custom-tagify-elements{
+  display: flex;
+}
+.tagify-elem{
+  margin-left: 15px;
+  padding: 5px 10px;
+  background-color: grey;
+  border-radius: 20px;
+  color: white;
+  transition: all .3s !important;
+  display: flex;
+  height: 22px;
+  min-width: fit-content;
+}
+.tagify-elem > span{
+  margin-left: 5px;
+}
+.tagify-elem:hover{
+  background-color: #06a9f7;
+  cursor: pointer;
+}
+.active-tag{
+  background-color: #06a9f7;
+}
+.spinner-load{
+  width: 35px;
+  height: 35px;
+  border: 2px solid #f3f3f3;
+  border-top:3px solid #06a9f7;
+  border-radius: 100%;
+  position: absolute;
+  margin: auto;
+  bottom: 50px;
+  margin-left: 30px;
+  animation: spin 1s infinite linear;
+}
+@keyframes spin {
+  from{
+      transform: rotate(0deg);
+  }to{
+      transform: rotate(360deg);
+  }
+}
+.control-and-title{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-right: 20px;
+}
+.layer-title{
+  padding: 5px 10px;
+  background-color: grey;
+  color: #FFFF;
+  font-size: 12px;
+  width: fit-content;
+  margin-bottom: 10px;
+  border-radius: 20px;
+}
+.main-control{
+  color: lightgray;
+  border: 1px solid lightgray;
+  background-color: #FFFF;
+  padding: 5px 10px;
+  border-radius: 20px;
+  width: fit-content;
+  display: flex;
+  align-items: center;
+}
+.mc-text{
+  color: grey;
+}
+.mc-icon{
+  height: 10px;
+  width: 10px;
+  margin-left: 10px;
+  background-repeat: no-repeat;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="lightgray" viewBox="0 0 320 512"><!--! Font Awesome Pro 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. --><path d="M310.6 246.6l-127.1 128C176.4 380.9 168.2 384 160 384s-16.38-3.125-22.63-9.375l-127.1-128C.2244 237.5-2.516 223.7 2.438 211.8S19.07 192 32 192h255.1c12.94 0 24.62 7.781 29.58 19.75S319.8 237.5 310.6 246.6z"/></svg>');
+}
+.sub-select{
+  position: absolute;
+  background-color: #FFFF;
+  opacity: .7;
+  margin-top: 10px;
+  border-radius: 10px;
+  right: 40px;
+}
+.option-text{
+  width: 450px;
+  height: fit-content;
+  padding: 5px 10px;
+  color: #181818;
+}
+.option-text:hover{
+  background-color: skyblue;
+  color: black;
+}
+.master-option{
+  background-color: #8950fc !important;
+}
+.master-option:hover{
+  background-color: #8950fc !important;
+}
+.active-option{
+  background-color: skyblue;
+  color: black;
+}
+.option-title{
+  font-size: 16px;
+  margin: 10px 0px;
+}
+.option-description{
+  font-size: 12px;
+}
+.hide{
+  display: none;
+}
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  border-radius: 0px;
+  background-color: #FFFF;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background-color: grey;
+}

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.8.2/mapbox-gl.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" type="text/css">
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.2.0/mustache.min.js" integrity="sha512-PZVApsHXBGPJoMmSikCGljCGpHTeYxdB3G+qIPBAh4LryOne3+Mr9cNuVk3ZuC2pQpiEjK2MLB74Q01lSUUb2Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js" integrity="sha512-Q7HOppxoH0L2M7hreVoFCtUZimR2YaY0fBewIYzkCgmNtgOOZ5IgMNYxHgfps0qrO1ef5m7L1FeHrhXlq1I9HA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.8.2/mapbox-gl.js"></script>
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
+  <script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
+  <script defer src="map.js"></script>
+  <script defer src="layer.controls.js"></script>
+</head>
+<body>
+  
+  <div id="map"></div>
+
+  <!-- order doesn't matter -->
+  <select name="zoom_level" id="zoom_level" class="zoom_level">
+    <option value="5">+ 5 Miles</option>
+    <option value="10">+ 10 Miles</option>
+    <option value="15">+ 15 Miles</option>
+    <option value="20">+ 20 Miles</option>
+    <option value="25">+ 25 Miles</option>
+    <option value="30">+ 30 Miles</option>
+    <option value="35">+ 35 Miles</option>
+    <option value="40">+ 40 Miles</option>
+  </select>
+
+  <div class="map-tags" id="layer_control">
+    <div class="control-and-title">
+      <div class="layer-title">
+        Extra Boundaries
+      </div>
+      <div class="custom-tagify-elements">
+        <div class="tagify-elem" data-val="brma">
+          BRMA
+          <span>🗙</span>
+        </div>
+        <div class="tagify-elem" data-val="county">
+          Counties
+          <span>🗙</span>
+        </div>
+        <div class="tagify-elem" data-val="borough">
+          Borough
+          <span>🗙</span>
+        </div>
+        <div class="tagify-elem" data-val="postalarea">
+          P. Area
+          <span>🗙</span>
+        </div>
+        <div class="tagify-elem" data-val="postaldistrict">
+          P. District
+          <span>🗙</span>
+        </div>
+        <div class="tagify-elem" data-val="postalsector">
+          P. Sector
+          <span>🗙</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="control-and-title">
+      <div class="layer-title">
+        View By
+      </div>
+      <div class="dummy-select">
+        <div id="main-control" class="main-control">
+          <div id="mc-text">
+            Counties
+          </div>
+          <div class="mc-icon"></div>
+        </div>
+        <div id="sub-select" class="sub-select hide">
+          <div class="option-text" data-name="BRMA" data-value="brma">
+            <h4 class="option-title">BRMA</h4>
+            <div class="option-description">
+              LHA rates relate to the area in which you make your claim. These areas are called broad rental market areas (BRMA)
+            </div>
+          </div>
+          <div class="option-text active-option" data-name="County" data-value="county" id="county-control">
+            <h4 class="option-title">Counties</h4>
+            <div class="option-description">
+              The counties of the United Kingdom are subnational divisions of the United Kingdom, used for the purposes of administrative, geographical and political demarcation
+            </div>
+          </div>
+          <div class="option-text" data-name="Borough" data-value="borough">
+            <h4 class="option-title">Borough</h4>
+            <div class="option-description">
+              A borough is an administrative division in various English-speaking countries.
+            </div>
+          </div>
+          <div class="option-text" data-name="Postal Area" data-value="postalarea">
+            <h4 class="option-title">Postal Area</h4>
+            <div class="option-description">
+              Postal codes used in the United Kingdom are alphanumeric and identify locations from a general area down to a specific georgaphic location.
+            </div>
+          </div>
+          <div class="option-text" data-name="Postal District" data-value="postaldistrict">
+            <h4 class="option-title">Postal District</h4>
+            <div class="option-description">
+              Postal codes used in the United Kingdom are alphanumeric and identify locations from a general area down to a specific georgaphic location.
+            </div>
+          </div>
+          <div class="option-text" data-name="Postal Sector" data-value="postalsector">
+            <h4 class="option-title">Postal Sector</h4>
+            <div class="option-description">
+              Postal codes used in the United Kingdom are alphanumeric and identify locations from a general area down to a specific georgaphic location.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="spinner-load" id="loading"></div>
+
+</body>
+</html>
