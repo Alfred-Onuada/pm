@@ -159,3 +159,6 @@ body{
   border-radius: 10px;
   background-color: grey;
 }
+.criteria-box{
+  pointer-events: auto;
+}

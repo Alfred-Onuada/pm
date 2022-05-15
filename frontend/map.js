@@ -81,9 +81,11 @@ let _map = null;
 let exactSearchText = "";
 let searchResultCenter = [];
 
+// manages state in the map quite useful
+let _state = null;
+let _currentlyProcessing = null;
+
 function init() {
-  // resets Map object first
-  _map = null;
 
   // create map object
   mapboxgl.accessToken = _accessToken;
@@ -92,7 +94,6 @@ function init() {
     style: "mapbox://styles/mapbox/streets-v11",
     center: _defaults.center,
     zoom: _defaults.zoom,
-    hash: true
   });
 
   _map.addControl(
@@ -124,6 +125,14 @@ function init() {
 
     // add custom controls
     activateCustomControls(_map);
+
+    // function exists in a different file the id's it relies on are not available in the DOM when the page is loaded
+    // relies on the activateCustomControls function to be called first
+    enableMainControls();
+
+    // set a default parent layer
+    document.getElementById('county-control').click();
+    document.getElementById('main-control').click();
   });
 
   // add and remove preloader, idle is better than render because render fires a lot of times
@@ -134,9 +143,6 @@ function init() {
   _map.on('data', () => {
     document.getElementById("loading").classList.remove('hide');
   })
-
-  // set a default parent layer
-  setParentLayer("County", _map);
 
 }
 
@@ -1138,7 +1144,7 @@ function activateCustomControls(map) {
       this._map = undefined;
     }
   }
-
+  
   map.addControl(
     new customRadiusZoomControl(), 
     "top-left"
@@ -1149,10 +1155,167 @@ function activateCustomControls(map) {
     onAdd(map) {
       this._map = map;
       this._container = document.getElementById("layer_control");
+      let parentLayerName = '';
+
+      // register listeners for layer controls
+      const subControls = document.getElementsByClassName("tagify-elem");
+      [].forEach.call(subControls, (elem) => {
+        elem.addEventListener("click", (e) => {
+          if (elem.classList.contains('active-tag') && elem.getAttribute('data-val').toLowerCase() == parentLayerName.toLocaleLowerCase()) {
+            // don't toggle layer off since it's the parent
+            return;
+          }
+
+          e.stopPropagation();
+
+          if (elem.classList.contains("active-tag")) {
+            elem.classList.remove('active-tag');
+            map.setLayoutProperty(
+              elem.getAttribute('data-val'),
+              "visibility",
+              "none"
+            );
+            map.setLayoutProperty(
+              `${elem.getAttribute('data-val')}-lyr-stroke`,
+              "visibility",
+              "none"
+            );
+            map.setLayoutProperty(
+              `${elem.getAttribute('data-val')}-lbl`,
+              "visibility",
+              "none"
+            );
+          } else {
+            elem.classList.add('active-tag');
+            map.setLayoutProperty(
+              elem.getAttribute('data-val'),
+              "visibility",
+              "visible"
+            );
+            map.setLayoutProperty(
+              `${elem.getAttribute('data-val')}-lyr-stroke`,
+              "visibility",
+              "visible"
+            );
+            map.setLayoutProperty(
+              `${elem.getAttribute('data-val')}-lbl`,
+              "visibility",
+              "visible"
+            );
+          }
+        });
+
+        let optionList = document.getElementsByClassName('option-text');
+
+        [].forEach.call(optionList, (elem) => {
+          elem.addEventListener('click', () => {
+            let child = elem;
+            parentLayerName = elem.getAttribute('data-value');
+            setParentLayer(parentLayerName, map);
+
+            //Delete highlight state on all other layers other than the selected
+            for (var i = 0; i < _state.selected.length; i++) {
+              if (
+                _state.selected[i].layer !=
+                elem.getAttribute("data-name")
+              ) {
+                map.removeFeatureState(_state.selected[i]);
+                _state.selected.splice(i, 1);
+              }
+            }
+
+            //Hide all layers but the currently selected
+            let layerNames = Object.keys(_defaults.layers);
+
+            for (var i = 0; i < layerNames.length; i++) {
+              if (
+                layerNames[i] != elem.getAttribute('data-value')
+              ) {
+                map.setLayoutProperty(
+                  layerNames[i],
+                  "visibility",
+                  "none"
+                );
+                map.setLayoutProperty(
+                  `${layerNames[i]}-lyr-stroke`,
+                  "visibility",
+                  "none"
+                );
+                map.setLayoutProperty(
+                  `${layerNames[i]}-lbl`,
+                  "visibility",
+                  "none"
+                );
+              } else {
+                map.setLayoutProperty(
+                  layerNames[i],
+                  "visibility",
+                  "visible"
+                );
+                map.setLayoutProperty(
+                  `${layerNames[i]}-lyr-stroke`,
+                  "visibility",
+                  "visible"
+                );
+                map.setLayoutProperty(
+                  `${layerNames[i]}-lbl`,
+                  "visibility",
+                  "visible"
+                );
+              }
+            }
+
+            // activate the matching tagify element when the parent changes
+            [].forEach.call(subControls, (elem) => {
+              // remove all active tagify layers
+              if (elem.classList.contains('active-tag')) {
+                elem.click();
+
+                // remove the previous master-option
+                if (elem.classList.contains('master-option')) {
+                  elem.classList.remove('master-option');
+                }
+              }
+
+              // if the child matches the parent, add the master-option class to it
+              if (elem.getAttribute('data-val').toLowerCase() === parentLayerName.toLowerCase()) {
+                elem.classList.add('master-option');
+              }
+  
+              if (elem.getAttribute('data-val').toLowerCase() === child.getAttribute('data-value').toLowerCase()) {
+                elem.click();
+              }
+            });
+
+            // Jump to the default minimum zoom level defined for the selected parent layer
+            // or stick to the current zoom if an area has already been clicked in previous layer
+            if (_currentlyProcessing && _defaults.layers[child.getAttribute('data-value')].mz < map.getZoom()) {
+              map.flyTo({
+                zoom: map.getZoom(),
+                center: map.getCenter(), // center of the map
+                bearing: 0,
+                speed: 0.7,
+                essential: true
+              })
+            } else {
+              map.flyTo({
+                zoom: _defaults.layers[child.getAttribute('data-value')].mz,
+                center: _currentlyProcessing ? map.getCenter() : [-1.8594463589181272, 53.318170599741286], // center of the map
+                bearing: 0,
+                speed: 0.7,
+                essential: true
+              })
+            }
+
+          })
+        });
+      
+      })
+      
       return this._container;
     }
     onRemove(map) {
-      this._container.parentNode.removeChild(this._container);
+      this._container.parentNode.removelem(this._container);
       this._map = undefined;
     }
   }
@@ -1161,6 +1324,47 @@ function activateCustomControls(map) {
     new customLayerControl(),
     "top-right"
   );
+  
+
+  // adds reset button and criteria
+  class customResetAndCriteriaControl {
+    onAdd(map) {
+      this._map = map;
+      this._container = document.getElementById("criteria-box");
+
+      // add listener for map reset
+      const resetButton = document.getElementById("reset-button");
+      resetButton.addEventListener('click', () => {
+        // resets the map variables
+        _currentlyProcessing = null;
+        _state = null;
+        exactSearchText = "";
+        searchResultCenter = [];
+        document.getElementById('map').innerHTML = "";
+        _map = null;
+
+        const parser = new DOMParser();
+        const htmlDoc = parser.parseFromString(document.getElementById("cloning-factory").textContent, 'text/html');
+        document.getElementById('controls').appendChild(htmlDoc.getElementById('zoom_level'));
+        document.getElementById('controls').appendChild(htmlDoc.getElementById('layer_control'));
+        document.getElementById('controls').appendChild(htmlDoc.getElementById('criteria-box'));
+
+        init();
+      })
+
+      return this._container;
+    }
+    onRemove(map) {
+      this._container.parentNode.removelem(this._container);
+      this._map = undefined;
+    }
+  }
+
+  map.addControl(
+    new customResetAndCriteriaControl(),
+    "bottom-right"
+  )
+  
 }
 
 function activateSearch(searchBar, map) {

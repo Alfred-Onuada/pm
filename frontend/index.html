@@ -22,105 +22,222 @@
   
   <div id="map"></div>
 
-  <!-- order doesn't matter -->
-  <select name="zoom_level" id="zoom_level" class="zoom_level">
-    <option value="5">+ 5 Miles</option>
-    <option value="10">+ 10 Miles</option>
-    <option value="15">+ 15 Miles</option>
-    <option value="20">+ 20 Miles</option>
-    <option value="25">+ 25 Miles</option>
-    <option value="30">+ 30 Miles</option>
-    <option value="35">+ 35 Miles</option>
-    <option value="40">+ 40 Miles</option>
-  </select>
-
-  <div class="map-tags" id="layer_control">
-    <div class="control-and-title">
-      <div class="layer-title">
-        Extra Boundaries
-      </div>
-      <div class="custom-tagify-elements">
-        <div class="tagify-elem" data-val="brma">
-          BRMA
-          <span>🗙</span>
+  <div id="controls">
+    <select name="zoom_level" id="zoom_level" class="zoom_level">
+      <option value="5">+ 5 Miles</option>
+      <option value="10">+ 10 Miles</option>
+      <option value="15">+ 15 Miles</option>
+      <option value="20">+ 20 Miles</option>
+      <option value="25">+ 25 Miles</option>
+      <option value="30">+ 30 Miles</option>
+      <option value="35">+ 35 Miles</option>
+      <option value="40">+ 40 Miles</option>
+    </select>
+  
+    <div class="map-tags" id="layer_control">
+      <div class="control-and-title">
+        <div class="layer-title">
+          Extra Boundaries
         </div>
-        <div class="tagify-elem" data-val="county">
-          Counties
-          <span>🗙</span>
-        </div>
-        <div class="tagify-elem" data-val="borough">
-          Borough
-          <span>🗙</span>
-        </div>
-        <div class="tagify-elem" data-val="postalarea">
-          P. Area
-          <span>🗙</span>
-        </div>
-        <div class="tagify-elem" data-val="postaldistrict">
-          P. District
-          <span>🗙</span>
-        </div>
-        <div class="tagify-elem" data-val="postalsector">
-          P. Sector
-          <span>🗙</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="control-and-title">
-      <div class="layer-title">
-        View By
-      </div>
-      <div class="dummy-select">
-        <div id="main-control" class="main-control">
-          <div id="mc-text">
+        <div class="custom-tagify-elements">
+          <div class="tagify-elem" data-val="brma">
+            BRMA
+            <span>🗙</span>
+          </div>
+          <div class="tagify-elem" data-val="county">
             Counties
+            <span>🗙</span>
           </div>
-          <div class="mc-icon"></div>
+          <div class="tagify-elem" data-val="borough">
+            Borough
+            <span>🗙</span>
+          </div>
+          <div class="tagify-elem" data-val="postalarea">
+            P. Area
+            <span>🗙</span>
+          </div>
+          <div class="tagify-elem" data-val="postaldistrict">
+            P. District
+            <span>🗙</span>
+          </div>
+          <div class="tagify-elem" data-val="postalsector">
+            P. Sector
+            <span>🗙</span>
+          </div>
         </div>
-        <div id="sub-select" class="sub-select hide">
-          <div class="option-text" data-name="BRMA" data-value="brma">
-            <h4 class="option-title">BRMA</h4>
-            <div class="option-description">
-              LHA rates relate to the area in which you make your claim. These areas are called broad rental market areas (BRMA)
+      </div>
+  
+      <div class="control-and-title">
+        <div class="layer-title">
+          View By
+        </div>
+        <div class="dummy-select">
+          <div id="main-control" class="main-control">
+            <div id="mc-text">
+              Counties
             </div>
+            <div class="mc-icon"></div>
           </div>
-          <div class="option-text active-option" data-name="County" data-value="county" id="county-control">
-            <h4 class="option-title">Counties</h4>
-            <div class="option-description">
-              The counties of the United Kingdom are subnational divisions of the United Kingdom, used for the purposes of administrative, geographical and political demarcation
+          <div id="sub-select" class="sub-select hide">
+            <div class="option-text" data-name="BRMA" data-value="brma">
+              <h4 class="option-title">BRMA</h4>
+              <div class="option-description">
+                LHA rates relate to the area in which you make your claim. These areas are called broad rental market areas (BRMA)
+              </div>
             </div>
-          </div>
-          <div class="option-text" data-name="Borough" data-value="borough">
-            <h4 class="option-title">Borough</h4>
-            <div class="option-description">
-              A borough is an administrative division in various English-speaking countries.
+            <div class="option-text active-option" data-name="County" data-value="county" id="county-control">
+              <h4 class="option-title">Counties</h4>
+              <div class="option-description">
+                The counties of the United Kingdom are subnational divisions of the United Kingdom, used for the purposes of administrative, geographical and political demarcation
+              </div>
             </div>
-          </div>
-          <div class="option-text" data-name="Postal Area" data-value="postalarea">
-            <h4 class="option-title">Postal Area</h4>
-            <div class="option-description">
-              Postal codes used in the United Kingdom are alphanumeric and identify locations from a general area down to a specific georgaphic location.
+            <div class="option-text" data-name="Borough" data-value="borough">
+              <h4 class="option-title">Borough</h4>
+              <div class="option-description">
+                A borough is an administrative division in various English-speaking countries.
+              </div>
             </div>
-          </div>
-          <div class="option-text" data-name="Postal District" data-value="postaldistrict">
-            <h4 class="option-title">Postal District</h4>
-            <div class="option-description">
-              Postal codes used in the United Kingdom are alphanumeric and identify locations from a general area down to a specific georgaphic location.
+            <div class="option-text" data-name="Postal Area" data-value="postalarea">
+              <h4 class="option-title">Postal Area</h4>
+              <div class="option-description">
+                Postal codes used in the United Kingdom are alphanumeric and identify locations from a general area down to a specific georgaphic location.
+              </div>
             </div>
-          </div>
-          <div class="option-text" data-name="Postal Sector" data-value="postalsector">
-            <h4 class="option-title">Postal Sector</h4>
-            <div class="option-description">
-              Postal codes used in the United Kingdom are alphanumeric and identify locations from a general area down to a specific georgaphic location.
+            <div class="option-text" data-name="Postal District" data-value="postaldistrict">
+              <h4 class="option-title">Postal District</h4>
+              <div class="option-description">
+                Postal codes used in the United Kingdom are alphanumeric and identify locations from a general area down to a specific georgaphic location.
+              </div>
+            </div>
+            <div class="option-text" data-name="Postal Sector" data-value="postalsector">
+              <h4 class="option-title">Postal Sector</h4>
+              <div class="option-description">
+                Postal codes used in the United Kingdom are alphanumeric and identify locations from a general area down to a specific georgaphic location.
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    
+    <div class="footer_criteria_toggle criteria-box" id="criteria-box">
+      <span class="label label-l label-info label-inline mr-2" id="kt_demo_panel_toggle" data-toggle="kt-tooltip" title data-placement="top" data-original-title="3 bedroom terrace houses in NW1"><input type="checkbox" name="Checkboxes1" class="criteria" data-id="1" autocomplete="off">criteria 1</span>
+      <span class="label label-l label-info label-inline mr-2" id="kt_demo_panel_toggle" data-toggle="kt-tooltip" title data-placement="top" data-original-title="3 bedroom semi-detached houses in NW2"><input type="checkbox" name="Checkboxes1" class="criteria" data-id="12" autocomplete="off">criteria 2</span>
+      <span class="label label-l label-info label-inline mr-2" id="kt_demo_panel_toggle" data-toggle="kt-tooltip" title data-placement="top" data-original-title="2 bedroom flats houses in NW1"><input type="checkbox" name="Checkboxes1" class="criteria" data-id="23" autocomplete="off">criteria 3</span>
+      <span class="label label-l label-info label-inline mr-2" id="kt_demo_panel_toggle" data-toggle="kt-tooltip" title data-placement="top" data-original-title="2 bedroom maisonettes in NW3"><input type="checkbox" name="Checkboxes1" class="criteria" data-id="31" autocomplete="off">criteria 4</span>
+      <button id="reset-button" class="label label-l label-info label-inline mr-2" title data-placement="top">Reset Map</button>
+    </div>
+  
+    <div class="spinner-load" id="loading"></div>
   </div>
 
-  <div class="spinner-load" id="loading"></div>
+  <!-- order doesn't matter -->
+  <script type="text/template" id="cloning-factory">
+    <select name="zoom_level" id="zoom_level" class="zoom_level">
+      <option value="5">+ 5 Miles</option>
+      <option value="10">+ 10 Miles</option>
+      <option value="15">+ 15 Miles</option>
+      <option value="20">+ 20 Miles</option>
+      <option value="25">+ 25 Miles</option>
+      <option value="30">+ 30 Miles</option>
+      <option value="35">+ 35 Miles</option>
+      <option value="40">+ 40 Miles</option>
+    </select>
+  
+    <div class="map-tags" id="layer_control">
+      <div class="control-and-title">
+        <div class="layer-title">
+          Extra Boundaries
+        </div>
+        <div class="custom-tagify-elements">
+          <div class="tagify-elem" data-val="brma">
+            BRMA
+            <span>🗙</span>
+          </div>
+          <div class="tagify-elem" data-val="county">
+            Counties
+            <span>🗙</span>
+          </div>
+          <div class="tagify-elem" data-val="borough">
+            Borough
+            <span>🗙</span>
+          </div>
+          <div class="tagify-elem" data-val="postalarea">
+            P. Area
+            <span>🗙</span>
+          </div>
+          <div class="tagify-elem" data-val="postaldistrict">
+            P. District
+            <span>🗙</span>
+          </div>
+          <div class="tagify-elem" data-val="postalsector">
+            P. Sector
+            <span>🗙</span>
+          </div>
+        </div>
+      </div>
+  
+      <div class="control-and-title">
+        <div class="layer-title">
+          View By
+        </div>
+        <div class="dummy-select">
+          <div id="main-control" class="main-control">
+            <div id="mc-text">
+              Counties
+            </div>
+            <div class="mc-icon"></div>
+          </div>
+          <div id="sub-select" class="sub-select hide">
+            <div class="option-text" data-name="BRMA" data-value="brma">
+              <h4 class="option-title">BRMA</h4>
+              <div class="option-description">
+                LHA rates relate to the area in which you make your claim. These areas are called broad rental market areas (BRMA)
+              </div>
+            </div>
+            <div class="option-text active-option" data-name="County" data-value="county" id="county-control">
+              <h4 class="option-title">Counties</h4>
+              <div class="option-description">
+                The counties of the United Kingdom are subnational divisions of the United Kingdom, used for the purposes of administrative, geographical and political demarcation
+              </div>
+            </div>
+            <div class="option-text" data-name="Borough" data-value="borough">
+              <h4 class="option-title">Borough</h4>
+              <div class="option-description">
+                A borough is an administrative division in various English-speaking countries.
+              </div>
+            </div>
+            <div class="option-text" data-name="Postal Area" data-value="postalarea">
+              <h4 class="option-title">Postal Area</h4>
+              <div class="option-description">
+                Postal codes used in the United Kingdom are alphanumeric and identify locations from a general area down to a specific georgaphic location.
+              </div>
+            </div>
+            <div class="option-text" data-name="Postal District" data-value="postaldistrict">
+              <h4 class="option-title">Postal District</h4>
+              <div class="option-description">
+                Postal codes used in the United Kingdom are alphanumeric and identify locations from a general area down to a specific georgaphic location.
+              </div>
+            </div>
+            <div class="option-text" data-name="Postal Sector" data-value="postalsector">
+              <h4 class="option-title">Postal Sector</h4>
+              <div class="option-description">
+                Postal codes used in the United Kingdom are alphanumeric and identify locations from a general area down to a specific georgaphic location.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="footer_criteria_toggle criteria-box" id="criteria-box">
+      <span class="label label-l label-info label-inline mr-2" id="kt_demo_panel_toggle" data-toggle="kt-tooltip" title data-placement="top" data-original-title="3 bedroom terrace houses in NW1"><input type="checkbox" name="Checkboxes1" class="criteria" data-id="1" autocomplete="off">criteria 1</span>
+      <span class="label label-l label-info label-inline mr-2" id="kt_demo_panel_toggle" data-toggle="kt-tooltip" title data-placement="top" data-original-title="3 bedroom semi-detached houses in NW2"><input type="checkbox" name="Checkboxes1" class="criteria" data-id="12" autocomplete="off">criteria 2</span>
+      <span class="label label-l label-info label-inline mr-2" id="kt_demo_panel_toggle" data-toggle="kt-tooltip" title data-placement="top" data-original-title="2 bedroom flats houses in NW1"><input type="checkbox" name="Checkboxes1" class="criteria" data-id="23" autocomplete="off">criteria 3</span>
+      <span class="label label-l label-info label-inline mr-2" id="kt_demo_panel_toggle" data-toggle="kt-tooltip" title data-placement="top" data-original-title="2 bedroom maisonettes in NW3"><input type="checkbox" name="Checkboxes1" class="criteria" data-id="31" autocomplete="off">criteria 4</span>
+      <button id="reset-button" class="label label-l label-info label-inline mr-2" title data-placement="top">Reset Map</button>
+    </div>
+  </script>
 
 </body>
 </html>
