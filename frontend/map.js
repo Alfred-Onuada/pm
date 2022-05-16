@@ -1,11 +1,14 @@
 // global variables
 const _accessToken = "pk.eyJ1IjoiYWxmcmVkb251YWRhIiwiYSI6ImNsMzNwYXAyOTA5bjIzY3BvbWFlM2t0dXAifQ.DFUlTV72_GSX7ClaonIIRw";
-const _apiUrl = "http://145.239.253.100:4500/api/";
+const _apiUrl = "http://localhost:4500/api/";
 
 const _defaults = {
   center: [-1.8594463589181272, 53.318170599741286],
   zoom: 5.5,
   radiusToZoom: {
+    0.5: 13.5,
+    1: 12,
+    3: 11,
     5: 10.5,
     10: 9.5,
     15: 9,
@@ -82,7 +85,9 @@ let exactSearchText = "";
 let searchResultCenter = [];
 
 // manages state in the map quite useful
-let _state = null;
+let _state = {
+  selected: []
+};
 let _currentlyProcessing = null;
 
 function init() {
@@ -104,6 +109,7 @@ function init() {
   let searchBar = new MapboxGeocoder({
     accessToken: mapboxgl.accessToken,
     mapboxgl: mapboxgl,
+    marker: false,
     countries: 'gb',
     filter: function (e) {
       // add filters to keep results as relevant as possible
@@ -118,6 +124,17 @@ function init() {
 
   // add neccesary layers
   _map.on("load", function () {
+
+    // load custom image for houses
+    _map.loadImage('houseMarker.png', (err, img) => {
+      // handle this with a popup
+      if (err) throw err
+
+      // add the image to the map
+      _map.addImage('houseMarker', img)
+
+    })
+
     registerLayers(_map);
 
     // activate various functions
@@ -297,6 +314,25 @@ function registerLayers(map) {
     paint: {
       "fill-color": "#06a9f7",
       "fill-opacity": .5,
+    },
+  });
+
+  // add source for properties
+  map.addSource('properties-source', {
+    type: 'geojson',
+    data: {
+      type: 'FeatureCollection',
+      features: []
+    }
+  });
+
+  map.addLayer({
+    id: 'properties-layer',
+    type: 'symbol',
+    source: 'properties-source',
+    layout: {
+      'icon-image': 'houseMarker',
+      'icon-size': 0.08,
     },
   });
 
@@ -842,6 +878,11 @@ function registerLayers(map) {
       }
     }
 
+    // get properties
+    removeAnyPreviousSearchCircle(map);
+    removeAnyPreviousProperties(map);
+    getAndSetProperties(firstFeature, 0, map);
+
     let latlngbnds = turf.bbox(firstFeature);
 
     map.fitBounds(
@@ -857,6 +898,15 @@ function registerLayers(map) {
     _state = {
       selected: []
     }
+    
+    // handle click on property icon
+    map.on("click", "properties-layer", () => {})
+
+    // hanlde hover over property icon
+    map.on("mouseenter", "properties-layer", () => {})
+
+    // handle mouse leave on property icon
+    map.on("mouseleave", "properties-layer", () => {})
 
     map.on("click", "county", function (e) {
       if (!e.originalEvent.defaultPrevented) {
@@ -1289,18 +1339,19 @@ function activateCustomControls(map) {
 
             // Jump to the default minimum zoom level defined for the selected parent layer
             // or stick to the current zoom if an area has already been clicked in previous layer
-            if (_currentlyProcessing && _defaults.layers[child.getAttribute('data-value')].mz < map.getZoom()) {
+            if (_currentlyProcessing && _defaults.layers[child.getAttribute('data-value')].mz < map.getZoom()) {              
               map.flyTo({
+                // _currentlyProcessing.origin == 'search' ? _defaults.layers[child.getAttribute('data-value')].mz : 
                 zoom: map.getZoom(),
-                center: map.getCenter(), // center of the map
+                center: _currentlyProcessing.center, // center of the map
                 bearing: 0,
                 speed: 0.7,
                 essential: true
               })
-            } else {
+            } else {              
               map.flyTo({
                 zoom: _defaults.layers[child.getAttribute('data-value')].mz,
-                center: _currentlyProcessing ? map.getCenter() : [-1.8594463589181272, 53.318170599741286], // center of the map
+                center: _currentlyProcessing ? _currentlyProcessing.center : [-1.8594463589181272, 53.318170599741286], // center of the map
                 bearing: 0,
                 speed: 0.7,
                 essential: true
@@ -1337,7 +1388,9 @@ function activateCustomControls(map) {
       resetButton.addEventListener('click', () => {
         // resets the map variables
         _currentlyProcessing = null;
-        _state = null;
+        let _state = {
+          selected: []
+        };
         exactSearchText = "";
         searchResultCenter = [];
         document.getElementById('map').innerHTML = "";
@@ -1376,18 +1429,18 @@ function activateSearch(searchBar, map) {
   // when the search bar is cleared
   searchBar.on('clear', () => {
     exactSearchText = "";
+    document.getElementById("zoom_level").value = "0.5";
     removeAnyPreviousSearchCircle(map);
+    removeAnyPreviousProperties(map);
   });
 
   const getMatchingLayer = async ({ result }) => {
 
     searchResultCenter = result.center;
 
-    console.log(result);
-
     try {
-      // let temp = await fetch(`${_apiUrl}search?q=${exactSearchText}`)
-      let temp = await fetch("http://145.239.253.100:4500/api/search/entities?qry=" + exactSearchText);
+      let temp = await fetch(`${_apiUrl}search?q=${exactSearchText}`)
+      // let temp = await fetch("http://145.239.253.100:4500/api/search/entities?qry=" + exactSearchText);
       temp = await temp.json();
       let matchingLayer = temp.data.length ? temp.data[0] : null;
 
@@ -1395,11 +1448,13 @@ function activateSearch(searchBar, map) {
       if (matchingLayer == null) {
         activateSearchByArea(map);
       } else {
-
+        activateClickOnMatchingLayer(matchingLayer, map);
       }
     } catch (error) {
       // handle error with a popup
       console.log(error);
+
+      activateSearchByArea(map);
     }
   }
 
@@ -1416,14 +1471,42 @@ function removeAnyPreviousSearchCircle(map) {
 
 }
 
-function activateSearchByArea(map) {
+function removeAnyPreviousProperties(map) {
+  // empty properties source
+  map.getSource('properties-source').setData({
+    type: "FeatureCollection",
+    features: [],
+  })
+}
+
+
+async function getAndSetProperties(polygon, currentPageOffset, map) {
+  // begin adding info to the properties-source
+  try {
+    let polygonBBox = turf.bbox(polygon);
+
+    // get the query up and running jis will have to do some modifications
+    let propertiesCoordinates = await fetch(`${_apiUrl}properties?bounds=${polygonBBox.join(',')}&pageOffset=${currentPageOffset}`);
+    propertiesCoordinates = await propertiesCoordinates.json();
+    
+    map.getSource('properties-source').setData(propertiesCoordinates);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function activateSearchByArea(map) {
 
   removeAnyPreviousSearchCircle(map);
+  removeAnyPreviousProperties(map);
 
-  let circleRadius = 5; // default radius of search area in miles
+  let circleRadius = .5; // default radius of search area in miles
   let circleOptions = {steps: 100, units: 'miles', properties: {}};
   let circle = turf.circle(searchResultCenter, circleRadius, circleOptions);
   let proportionateZoom = _defaults.radiusToZoom[circleRadius];
+
+  // will determine if there are more properties to load
+  let currentPageOffset = 0;
 
   // set zoom a little closer
   map.flyTo({
@@ -1432,6 +1515,8 @@ function activateSearchByArea(map) {
   });
 
   map.getSource('circle-source').setData(circle);
+  
+  getAndSetProperties(circle, currentPageOffset, map);
 
   // add a radius change event
   const changeSearchRadius = (e) => {
@@ -1440,15 +1525,43 @@ function activateSearchByArea(map) {
     circle = turf.circle(searchResultCenter, circleRadius, circleOptions);
     proportionateZoom = _defaults.radiusToZoom[circleRadius];
 
+    let currentPageOffset = 0;
+
     map.flyTo({
       center: searchResultCenter,
       zoom: proportionateZoom,
     });
 
     map.getSource('circle-source').setData(circle);
+
+    getAndSetProperties(circle, currentPageOffset, map);
   }
 
   document.getElementById('zoom_level').addEventListener('change', changeSearchRadius);
+}
+
+function activateClickOnMatchingLayer(match, map) {
+  // change parent layer accordingly
+  let parentLayerName = match.type;
+
+  let centerGeometry = turf.center(
+    turf.points(
+      JSON.parse(match.geom).coordinates[0]
+    )
+  ).geometry.coordinates;
+
+  // use the fitBounds to get an appropriate zoom on the place
+
+  // trigger currentlyProcessing to prevent map from moving to center
+  _currentlyProcessing = {
+    layerName: parentLayerName,
+    origin: 'search',
+    center: centerGeometry,
+    relavantInfo: null // not sure what to put here
+  }
+
+  document.querySelector('[data-value="' + parentLayerName + '"]').click();
+  document.getElementById("main-control").click(); // hides main menu as it will be open
 }
 
 init();
