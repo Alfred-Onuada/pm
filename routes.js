@@ -192,7 +192,7 @@ module.exports = function(app, db) {
 				const response = await axios.get(`http://145.239.253.100/api/search/${bounds}/coords/page/${pageNo}`);
 				
 				if (response.data.properties.length > 0) {
-					maxPageNo = maxPageNo ? maxPageNo : (response.data.property_count / 100);
+					maxPageNo = maxPageNo ? maxPageNo : Math.round(response.data.property_count / 100);
 					retrievedData.push(...response.data.properties);
 				}
 
@@ -216,7 +216,6 @@ module.exports = function(app, db) {
 			
 			for (let index = 0; index < properties.length; index++) {
 				const property = properties[index];
-				// "identifier":"R88316524","Longitude":"-2.608815","Latitude":"51.456560","ShortPostcode":"BS8","Price":"230000","Bedrooms":"1","HouseType":"Flats\/Apartments","HouseType_OLD":"flat"
 				let feature = {
 					"type": "Feature",
 					"geometry": {
@@ -225,7 +224,7 @@ module.exports = function(app, db) {
 					},
 					"properties": {
 						"identifier": property.identifier,
-						"ShortPostCode": property.ShortPostCode,
+						"ShortPostcode": property.ShortPostcode,
 						"Price": property.Price,
 						"Bedrooms": property.Bedrooms,
 						"HouseType": property.HouseType,
@@ -251,7 +250,113 @@ module.exports = function(app, db) {
 			return res.status(404).send("No properties to return");
 		}
 
-	})
+	});
+
+	router.get('/criteria', async (req, res) => {
+		const { ids, pageOffset } = req.query;
+		const screenBounds = req.query.screenBounds.split(',');
+		let currentPage = +(pageOffset);
+		let maxPageNo = null;
+		let retrievedData = [];
+		let mapNeedsToAdjustView = true;
+		let pointsToGetCenter = [];
+		let centerBounds = null;
+
+		async function getProperties(pageNo) {
+
+			try {
+				const response = await axios.get(`http://145.239.253.100/api/search/${ids}/criteria/page/${pageNo}`);
+				
+				// for some reason jis put the array inside another array
+				if (response.data.properties[0].length > 0) {
+					maxPageNo = maxPageNo ? maxPageNo : Math.round(response.data.property_count / 100);
+					retrievedData.push(...response.data.properties[0]);
+				}
+
+				// checks the offset to prevent just making useless queries
+				if (pageNo < pageOffset + 3 && (maxPageNo === null || pageNo < maxPageNo)) {
+					pageNo += 1;
+					await getProperties(pageNo);
+				}
+
+			} catch (error) {
+				console.log(error);
+				return res.status(500).send()
+			}
+
+		}
+
+		await getProperties(currentPage);
+
+		function convertToGeoJson(properties) {
+			let info = [];
+			
+			for (let index = 0; index < properties.length; index++) {
+				const property = properties[index];
+				let feature = {
+					"type": "Feature",
+					"geometry": {
+						"type": "Point",
+    				"coordinates": [property.Longitude, property.Latitude]
+					},
+					"properties": {
+						"identifier": property.identifier,
+						"ShortPostcode": property.ShortPostcode,
+						"Price": property.Price,
+						"Bedrooms": property.Bedrooms,
+						"HouseType": property.HouseType,
+						"HouseType_OLD": property.HouseType_OLD
+					}
+				}
+
+				// checks if any point falls within the current view, just one time it needs it
+				if (mapNeedsToAdjustView) {
+					let point = turf.point([property.Longitude, property.Latitude]);
+					let polygon = turf.polygon([[
+						[+screenBounds[0], +screenBounds[1]],
+						[+screenBounds[2], +screenBounds[1]],
+						[+screenBounds[2], +screenBounds[3]],
+						[+screenBounds[0], +screenBounds[3]],
+						[+screenBounds[0], +screenBounds[1]]
+					]]);
+					let withInView = turf.booleanPointInPolygon(point, polygon);
+
+					if (withInView) {
+						mapNeedsToAdjustView = false;
+					}
+				}
+				
+				pointsToGetCenter.push([+property.Longitude, +property.Latitude]);
+				info.push(feature);
+			}
+
+			let geojson = {
+				"type": "FeatureCollection",
+				"features": info
+			};
+
+			return geojson;
+		}
+
+		if (retrievedData.length > 0) {
+			let geoJsonRepOfProperties = convertToGeoJson(retrievedData);
+
+			// calculate the center point
+			if (pointsToGetCenter.length) {
+				centerBounds = turf.center(turf.points(pointsToGetCenter));
+			}
+
+			// centerbounds is sent either way because map may be zoom too out and will need to return to center
+			return res.status(200).json({ 
+				data: geoJsonRepOfProperties,
+				mapNeedsToAdjustView,
+				centerBounds: centerBounds.geometry.coordinates
+			});
+		} else {
+			return res.status(404).send("No properties to return");
+		}
+
+	});
 
   app.use('/api', router);
 }
