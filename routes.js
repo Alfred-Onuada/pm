@@ -238,17 +238,12 @@ module.exports = function(app, db) {
 			try {
 				const response = await axios.get(`http://145.239.253.100/api/search/${bounds}/coords/page/${pageNo}`);
 				
-				if (response.data.properties.length > 0) {
-					maxPageNo = maxPageNo ? maxPageNo : Math.round(response.data.property_count / 500);
-					totalProperties = totalProperties ? totalProperties : response.data.property_count;
+				if (response.data.properties && response.data.properties.length > 0) {
 					retrievedData.push(...response.data.properties);
 				}
 
-				// checks the offset to prevent just making useless queries
-				if ((pageNo < currentPage + 3) && (maxPageNo === null || pageNo < maxPageNo)) {
-					pageNo += 1;
-					await getProperties(pageNo);
-				}
+				maxPageNo = maxPageNo ? maxPageNo : Math.round(response.data.property_count / 500);
+				totalProperties = totalProperties ? totalProperties : response.data.property_count;
 
 			} catch (error) {
 				console.log(error);
@@ -298,7 +293,7 @@ module.exports = function(app, db) {
 				totalProperties
 			});
 		} else {
-			return res.status(404).send("No properties to return");
+			return res.status(200).json({ info: "No properties to return" });
 		}
 
 	});
@@ -320,7 +315,7 @@ module.exports = function(app, db) {
 				const response = await axios.get(`http://145.239.253.100/api/search/${ids}/criteria/page/${pageNo}`);
 				
 				// for some reason jis put the array inside another array
-				if (response.data.properties[0].length > 0) {
+				if (response.data.properties && response.data.properties[0].length > 0) {
 					maxPageNo = maxPageNo ? maxPageNo : Math.round(response.data.property_count / 500);
 					totalProperties = totalProperties ? totalProperties : response.data.property_count;
 					retrievedData.push(...response.data.properties[0]);
