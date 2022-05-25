@@ -4,7 +4,9 @@ const env = require('./env');
 const app = express();
 const bodyParser = require('body-parser');
 const db = require('./services/db');
+const compression = require('compression');
 
+app.use(compression());
 app.use(cors());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
