@@ -15,82 +15,131 @@ module.exports = function(app, db) {
   router.get("/search", (req, res) => {
     const queryString = req.query.q;
 
-    let query = `SELECT * FROM (SELECT * FROM (SELECT name, type, id, 'BRMA'::text AS lbl, ST_AsGeoJson(ST_Envelope(geom)) AS geom FROM brma WHERE SIMILARITY(NAME, '${queryString}') > 0.3 LIMIT 10) a
-		UNION
-		SELECT * FROM (SELECT name, type, id, 'Borough'::text AS lbl, ST_AsGeoJson(ST_Envelope(geom)) AS geom FROM borough WHERE SIMILARITY(NAME, '${queryString}') > 0.3 LIMIT 10) b
-		UNION
-		SELECT * FROM (SELECT name, type, id, 'County'::text AS lbl, ST_AsGeoJson(ST_Envelope(geom)) AS geom FROM county WHERE SIMILARITY(NAME, '${queryString}') > 0.3 LIMIT 10) c
-		UNION
-		SELECT * FROM (SELECT name, type, id, 'Postal Area'::text AS lbl, ST_AsGeoJson(ST_Envelope(geom)) AS geom FROM postalarea WHERE SIMILARITY(NAME, '${queryString}') > 0.3 LIMIT 10) d
-		UNION
-		SELECT * FROM (SELECT name, type, id, 'Postal District'::text AS lbl, ST_AsGeoJson(ST_Envelope(geom)) AS geom FROM postaldistrict WHERE SIMILARITY(NAME, '${queryString}') > 0.3 LIMIT 10) e
-		UNION
-		SELECT * FROM (SELECT name, type, id, 'Postal Sector'::text AS lbl, ST_AsGeoJson(ST_Envelope(geom)) AS geom FROM postalsector WHERE SIMILARITY(NAME, '${queryString}') > 0.3 LIMIT 10) f) sq ORDER BY name ASC`;
+		try {
+			let query = `SELECT * FROM (SELECT * FROM (SELECT name, type, id, 'BRMA'::text AS lbl, ST_AsGeoJson(ST_Envelope(geom)) AS geom FROM brma WHERE SIMILARITY(NAME, '${queryString}') > 0.3 LIMIT 10) a
+			UNION
+			SELECT * FROM (SELECT name, type, id, 'Borough'::text AS lbl, ST_AsGeoJson(ST_Envelope(geom)) AS geom FROM borough WHERE SIMILARITY(NAME, '${queryString}') > 0.3 LIMIT 10) b
+			UNION
+			SELECT * FROM (SELECT name, type, id, 'County'::text AS lbl, ST_AsGeoJson(ST_Envelope(geom)) AS geom FROM county WHERE SIMILARITY(NAME, '${queryString}') > 0.3 LIMIT 10) c
+			UNION
+			SELECT * FROM (SELECT name, type, id, 'Postal Area'::text AS lbl, ST_AsGeoJson(ST_Envelope(geom)) AS geom FROM postalarea WHERE SIMILARITY(NAME, '${queryString}') > 0.3 LIMIT 10) d
+			UNION
+			SELECT * FROM (SELECT name, type, id, 'Postal District'::text AS lbl, ST_AsGeoJson(ST_Envelope(geom)) AS geom FROM postaldistrict WHERE SIMILARITY(NAME, '${queryString}') > 0.3 LIMIT 10) e
+			UNION
+			SELECT * FROM (SELECT name, type, id, 'Postal Sector'::text AS lbl, ST_AsGeoJson(ST_Envelope(geom)) AS geom FROM postalsector WHERE SIMILARITY(NAME, '${queryString}') > 0.3 LIMIT 10) f) sq ORDER BY name ASC`;
 
-    db.query(query, [], async function(error, result) {
-      if (error) {
-        console.log(error.message);
-        // return res.status(400).json({ info: error.message });
-      }
-
-      // results is undefined or empty
-      if (typeof result == 'undefined' || result.rows.length == 0) {
-				let matches = [];
-				let finalResults = [];
-
-				// look for keys in the postal_area.json that are similar to the queryString 
-				for (let key of Object.keys(postalArea)) {
-					if (key.toLowerCase().includes(queryString.toLowerCase())) {
-						matches.push({key: key, value: postalArea[key]});
-					}
+			db.query(query, [], async function(error, result) {
+				if (error) {
+					return res.status(500).json({ info: "An error occured on the server - db relation error", message: error.message });
 				}
 
-				// look for keys in the postal_district.json that are similar to the queryString
-				for (let key of Object.keys(postalDistrict)) {
-					if (key.toLowerCase().includes(queryString.toLowerCase())) {
-						matches.push({key: key, value: postalDistrict[key]});
+				// results is undefined or empty
+				if (typeof result == 'undefined' || result.rows.length == 0) {
+					let matches = [];
+					let finalResults = [];
+			
+					// look for keys in the postal_area.json that are similar to the queryString 
+					for (let key of Object.keys(postalArea)) {
+						if (key.toLowerCase().includes(queryString.toLowerCase())) {
+							matches.push({ 
+								key: key,
+								value: postalArea[key],
+								type: 'Postal Area'
+							});
+						}
 					}
-				}
-
-				// look for keys in the postal_sector.json that are similar to the queryString
-				for (let key of Object.keys(postalSector)) {
-					if (key.toLowerCase().includes(queryString.toLowerCase())) {
-						matches.push({key: key, value: postalSector[key]});
+			
+					// look for keys in the postal_district.json that are similar to the queryString
+					for (let key of Object.keys(postalDistrict)) {
+						if (key.toLowerCase().includes(queryString.toLowerCase())) {
+							matches.push({ 
+								key: key,
+								value: postalDistrict[key],
+								type: 'Postal District'
+							});
+						}
 					}
-				}
+			
+					// look for keys in the postal_sector.json that are similar to the queryString
+					for (let key of Object.keys(postalSector)) {
+						if (key.toLowerCase().includes(queryString.toLowerCase())) {
+							matches.push({ 
+								key: key,
+								value: postalSector[key],
+								type: 'Postal Sector'
+							});
+						}
+					}
+			
+					// strip matches to only 10 records
+					matches = matches.slice(0, 10);
+						
+					for (let match of matches) {
+						let subQuery = '';
 
-				// strip matches to only 10 records
-				matches = matches.slice(0, 10);
+						switch (match.type) {
+							case 'Postal Area':
+								
+								subQuery = `SELECT * FROM (SELECT name, type, id, 'Postal Area'::text AS lbl, '${match.key}'::text AS subtitle, ST_AsGeoJson(ST_Envelope(geom)) AS geom FROM postalarea WHERE NAME LIKE '%${match.value}%' LIMIT 10)`;
 
-				for (let match of matches) {
-					let query = `SELECT * FROM (SELECT * FROM (SELECT name, type, id, 'Postal Area'::text AS lbl, ST_AsGeoJson(ST_Envelope(geom)) AS geom FROM postalarea WHERE NAME LIKE '%${match.value}%' LIMIT 10) d
-					UNION
-					SELECT * FROM (SELECT name, type, id, 'Postal District'::text AS lbl, ST_AsGeoJson(ST_Envelope(geom)) AS geom FROM postaldistrict WHERE NAME LIKE '%${match.value}%' LIMIT 10) e
-					UNION
-					SELECT * FROM (SELECT name, type, id, 'Postal Sector'::text AS lbl, ST_AsGeoJson(ST_Envelope(geom)) AS geom FROM postalsector WHERE NAME LIKE '%${match.value}%' LIMIT 10) f) sq ORDER BY name ASC`;
+								db.query(subQuery, [], function(error, result) {
+									if (error) {
+										return res.status(500).json({ info: "An error occured on the server - db relation error", message: error.message });
+									}
 
-					await db.query(query, [], function(error, result) {
-						if (error) {
-							console.log(error.message);
-							return;
+									finalResults.push(...result.rows);
+								});
+
+								break;
+
+							case 'Postal District':
+
+								subQuery = `SELECT * FROM (SELECT name, type, id, 'Postal District'::text AS lbl, '${match.key}'::text AS subtitle, ST_AsGeoJson(ST_Envelope(geom)) AS geom FROM postaldistrict WHERE NAME LIKE '%${match.value}%' LIMIT 10)`;
+
+								db.query(subQuery, [], function(error, result) {
+									if (error) {
+										return res.status(500).json({ info: "An error occured on the server - db relation error", message: error.message });
+									}
+
+									finalResults.push(...result.rows);
+								});
+
+								break;
+
+							case 'Postal Sector':
+
+								subQuery = `SELECT * FROM (SELECT name, type, id, 'Postal Sector'::text AS lbl, '${match.key}'::text AS subtitle, ST_AsGeoJson(ST_Envelope(geom)) AS geom FROM postalsector WHERE NAME LIKE '%${match.value}%' LIMIT 10)`;
+
+								db.query(subQuery, [], function(error, result) {
+									if (error) {
+										return res.status(500).json({ info: "An error occured on the server - db relation error", message: error.message });
+									}
+
+									finalResults.push(...result.rows);
+								});
+
+								break;
 						}
 
-						finalResults.push(...result.rows);
+					}
+			
+					if (finalResults.length > 0) {
+						return res.status(200).json({ data: finalResults });
+					} else {
+						return res.status(404).json({ info: "Not Found", finalResults });
+					}
+				} else {
+					return res.status(200).json({
+						data: result.rows
 					});
 				}
+			
+			});	
+		} catch (error) {
+			console.log(error);
+			return res.status(500).json({ info: "An error occured on the server - db error", message: error.message });
+		}
 
-				if (finalResults.length > 0) {
-					return res.status(200).json({ data: finalResults });
-				} else {
-					return res.status(404).json({ info: "Not Found" });
-				}
-      } else {
-				return res.status(200).json({
-					data: result.rows
-				});
-			}
-
-    });		
   })
 
   tilelive.load('mbtiles://./mbtiles/lbl.mbtiles', function(err, source) {
@@ -227,6 +276,7 @@ module.exports = function(app, db) {
 	});
 
 	router.get('/properties', async (req, res) => {
+		
 		const { bounds, pageOffset } = req.query;
 		let currentPage = +(pageOffset);
 		let maxPageNo = null;
@@ -314,19 +364,13 @@ module.exports = function(app, db) {
 			try {
 				const response = await axios.get(`http://145.239.253.100/api/search/${ids}/criteria/page/${pageNo}`);
 				
-				// for some reason jis put the array inside another array
+				// for some reason jis put the array inside another array and each criteria has a new array
 				if (response.data.properties && response.data.properties[0].length > 0) {
-					maxPageNo = maxPageNo ? maxPageNo : Math.round(response.data.property_count / 500);
-					totalProperties = totalProperties ? totalProperties : response.data.property_count;
-					retrievedData.push(...response.data.properties[0]);
+					retrievedData.push(...[].concat(...response.data.properties));
 				}
 
-				// checks the offset to prevent just making useless queries
-				if ((pageNo < currentPage + 3) && (maxPageNo === null || pageNo < maxPageNo)) {
-					pageNo += 1;
-					await getProperties(pageNo);
-				}
-
+				maxPageNo = maxPageNo ? maxPageNo : Math.round(response.data.property_count / 500);
+				totalProperties = totalProperties ? totalProperties : response.data.property_count;
 
 			} catch (error) {
 				console.log(error);
@@ -403,7 +447,7 @@ module.exports = function(app, db) {
 				totalProperties
 			});
 		} else {
-			return res.status(404).send("No properties to return");
+			return res.status(200).send({ info: "No properties to return" });
 		}
 
 	});
