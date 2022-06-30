@@ -324,7 +324,6 @@ module.exports = function(app, db) {
 					},
 					"properties": {
 						"identifier": property.identifier,
-						"source": "properties"
 					}
 				}
 
@@ -352,7 +351,7 @@ module.exports = function(app, db) {
 	});
 
 	router.get('/criteria', async (req, res) => {
-		const { ids, pageOffset, tempIds } = req.query;
+		const { ids, pageOffset } = req.query;
 		const screenBounds = req.query.screenBounds.split(',');
 		let currentPage = +(pageOffset);
 		let maxPageNo = null;
@@ -365,7 +364,7 @@ module.exports = function(app, db) {
 		async function getProperties(pageNo) {
 
 			try {
-				const response = await axios.get(`http://145.239.253.100/api/search/${ids}/criteria/${tempIds}/tempCriteria/page/${pageNo}`);
+				const response = await axios.get(`http://145.239.253.100/api/search/${ids}/criteria/page/${pageNo}`);
 				
 				// for some reason jis put the array inside another array and each criteria has a new array
 				if (response.data.properties && response.data.properties[0].length > 0) {
@@ -397,7 +396,6 @@ module.exports = function(app, db) {
 					},
 					"properties": {
 						"identifier": property.identifier,
-						"source": "criteria"
 					}
 				}
 
@@ -450,106 +448,6 @@ module.exports = function(app, db) {
 		}
 
 	});
-
-	// router.get('/temp_criteria', async (req, res) => {
-	// 	const { ids, pageOffset } = req.query;
-	// 	const screenBounds = req.query.screenBounds.split(',');
-	// 	let currentPage = +(pageOffset);
-	// 	let maxPageNo = null;
-	// 	let retrievedData = [];
-	// 	let mapNeedsToAdjustView = true;
-	// 	let pointsToGetCenter = [];
-	// 	let centerBounds = null;
-	// 	let totalProperties = 0;
-
-	// 	async function getProperties(pageNo) {
-
-	// 		try {
-	// 			const response = await axios.get(`http://145.239.253.100/api/search/${ids}/tempcriteria/page/${pageNo}`);
-				
-	// 			// for some reason jis put the array inside another array and each criteria has a new array
-	// 			if (response.data.properties && response.data.properties[0].length > 0) {
-	// 				retrievedData.push(...[].concat(...response.data.properties));
-	// 			}
-
-	// 			maxPageNo = maxPageNo ? maxPageNo : Math.round(response.data.property_count / 2000);
-	// 			totalProperties = totalProperties ? totalProperties : response.data.property_count;
-
-	// 		} catch (error) {
-	// 			console.log(error);
-	// 			return res.status(500).send()
-	// 		}
-
-	// 	}
-
-	// 	await getProperties(currentPage);
-
-	// 	function convertToGeoJson(properties) {
-	// 		let info = [];
-			
-	// 		for (let index = 0; index < properties.length; index++) {
-	// 			const property = properties[index];
-	// 			let feature = {
-	// 				"type": "Feature",
-	// 				"geometry": {
-	// 					"type": "Point",
-  //   				"coordinates": [property.Longitude, property.Latitude]
-	// 				},
-	// 				"properties": {
-	// 					"identifier": property.identifier,
-	// 					"source": "temp_criteria"
-	// 				}
-	// 			}
-
-	// 			// checks if any point falls within the current view, just one time it needs it
-	// 			if (mapNeedsToAdjustView) {
-	// 				let point = turf.point([property.Longitude, property.Latitude]);
-	// 				let polygon = turf.polygon([[
-	// 					[+screenBounds[0], +screenBounds[1]],
-	// 					[+screenBounds[2], +screenBounds[1]],
-	// 					[+screenBounds[2], +screenBounds[3]],
-	// 					[+screenBounds[0], +screenBounds[3]],
-	// 					[+screenBounds[0], +screenBounds[1]]
-	// 				]]);
-	// 				let withInView = turf.booleanPointInPolygon(point, polygon);
-
-	// 				if (withInView) {
-	// 					mapNeedsToAdjustView = false;
-	// 				}
-	// 			}
-				
-	// 			pointsToGetCenter.push([+property.Longitude, +property.Latitude]);
-	// 			info.push(feature);
-	// 		}
-
-	// 		let geojson = {
-	// 			"type": "FeatureCollection",
-	// 			"features": info
-	// 		};
-
-	// 		return geojson;
-	// 	}
-
-	// 	if (retrievedData.length > 0) {
-	// 		let geoJsonRepOfProperties = convertToGeoJson(retrievedData);
-
-	// 		// calculate the center point
-	// 		if (pointsToGetCenter.length) {
-	// 			centerBounds = turf.center(turf.points(pointsToGetCenter));
-	// 		}
-
-	// 		// centerbounds is sent either way because map may be zoom too out and will need to return to center
-	// 		return res.status(200).json({ 
-	// 			data: geoJsonRepOfProperties,
-	// 			mapNeedsToAdjustView,
-	// 			centerBounds: centerBounds.geometry.coordinates,
-	// 			totalProperties
-	// 		});
-	// 	} else {
-	// 		return res.status(200).send({ info: "No properties to return" });
-	// 	}
-
-	// });
 
   app.use('/api', router);
 }

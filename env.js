@@ -3,10 +3,10 @@ module.exports = {
     "portnum": 4500
   },
   "db": {
-    "user": "mi",
-    "host": "127.0.0.1",
-    "database": "recipebookdb",
-    "password": "mipassword",
+    "user": "ps_user",
+    "host": "localhost",
+    "database": "propsavvy_db",
+    "password": "gis.admin.1986",
     "port": 5432,
     "schema": "public"
   }
